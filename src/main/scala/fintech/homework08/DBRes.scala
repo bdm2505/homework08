@@ -5,6 +5,13 @@ import java.sql.{Connection, DriverManager, PreparedStatement, ResultSet}
 import scala.collection.mutable.ListBuffer
 
 case class DBRes[A](run: Connection => A) {
+
+  def map[B](fun: A => B): DBRes[B] =
+    DBRes(conn => fun(run(conn)))
+
+  def flatMap[B](fun: A => DBRes[B]): DBRes[B] =
+    DBRes{ conn => fun(run(conn)).run(conn) }
+
   def execute(uri: String): A = {
     println("Opening connection to DB...")
     val conn = DriverManager.getConnection(uri)
